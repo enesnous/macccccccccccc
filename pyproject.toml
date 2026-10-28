@@ -1,0 +1,34 @@
+[project]
+name = "macklip"
+version = "0.1.0"
+description = "Futbol maçından seçilen oyuncunun kliplerini çıkarıp birleştirir"
+requires-python = ">=3.10"
+dependencies = [
+    "faster-whisper>=1.0",
+    "scenedetect>=0.6",
+    "opencv-python-headless>=4.8",
+    "numpy",
+    "rapidfuzz>=3.0",
+    "pillow",
+    "dlib-bin",
+    "face_recognition_models",
+    "setuptools<81",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "python-multipart>=0.0.9",
+    "rapidocr_onnxruntime>=1.2",
+]
+
+[project.scripts]
+macklip = "macklip.cli:main"
+macklip-arayuz = "macklip.web:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["macklip"]
+
+[tool.setuptools.package-data]
+macklip = ["static/*"]

@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>macklip</title>
+<style>
+  :root {
+    --bg: #0b0f0d;
+    --panel: #131a16;
+    --panel-2: #1a231e;
+    --line: #26322b;
+    --text: #e8efe9;
+    --muted: #8fa198;
+    --accent: #2fd27a;
+    --accent-ink: #062814;
+    --warn: #f2b84b;
+    --danger: #ff6b6b;
+    --radius: 14px;
+    --c-gol: #2fd27a; --c-asist: #4fb3ff; --c-calim: #c58bff; --c-sut: #ffb547;
+    --c-faul: #ff6b6b; --c-yakin: #7fd8d0; --c-antrenman: #a7c957; --c-roportaj: #f4a3c8; --c-aksiyon: #8fa198;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  a { color: var(--accent); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+
+  header { border-bottom: 1px solid var(--line); position: sticky; top: 0; background: rgba(11,15,13,.92);
+    backdrop-filter: blur(8px); z-index: 10; }
+  header .wrap { display: flex; align-items: center; gap: 12px; height: 60px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; letter-spacing: -.02em;
+    cursor: pointer; }
+  .logo-mark { width: 30px; height: 30px; border-radius: 9px; background: var(--accent); color: var(--accent-ink);
+    display: grid; place-items: center; font-size: 17px; }
+  .logo small { font-weight: 500; color: var(--muted); font-size: 13px; letter-spacing: 0; }
+  header .spacer { flex: 1; }
+
+  .btn { border: 1px solid var(--line); background: var(--panel-2); padding: 9px 16px; border-radius: 10px;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text);
+    white-space: nowrap; }
+  .btn:hover { border-color: #3a4a40; }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.big { padding: 14px 26px; font-size: 16px; border-radius: 12px; }
+  .btn:disabled, .btn.disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
+  .btn.ghost { background: transparent; }
+
+  main { padding: 28px 0 80px; }
+  .view { display: none; }
+  .view.active { display: block; }
+  h1 { font-size: clamp(26px, 4vw, 38px); letter-spacing: -.03em; line-height: 1.15; margin: 8px 0 8px; }
+  h2 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
+  .lead { color: var(--muted); font-size: 16px; margin: 0 0 24px; max-width: 640px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+
+  /* Yükleme */
+  .upload-grid { display: grid; grid-template-columns: 1fr; gap: 18px; max-width: 760px; }
+  .drop { border: 2px dashed #34453b; border-radius: 18px; padding: 48px 20px; text-align: center; cursor: pointer;
+    background: radial-gradient(ellipse at top, rgba(47,210,122,.08), transparent 70%); transition: .15s; }
+  .drop:hover, .drop.over { border-color: var(--accent); background-color: rgba(47,210,122,.05); }
+  .drop .icon { font-size: 44px; line-height: 1; margin-bottom: 10px; }
+  .drop strong { font-size: 18px; display: block; }
+  .drop .hint { color: var(--muted); font-size: 14px; margin-top: 4px; }
+  .file-chosen { display: none; align-items: center; gap: 14px; text-align: left; }
+  .drop.has-file { border-style: solid; border-color: var(--accent); padding: 22px; }
+  .drop.has-file .empty { display: none; }
+  .drop.has-file .file-chosen { display: flex; }
+  .file-chosen .icon { margin: 0; font-size: 34px; }
+  .file-chosen .name { font-weight: 700; word-break: break-all; }
+  .file-chosen .size { color: var(--muted); font-size: 13px; }
+  details.adv { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+  details.adv summary { padding: 14px 18px; cursor: pointer; color: var(--muted); list-style: none; }
+  details.adv summary::before { content: "▸ "; }
+  details.adv[open] summary::before { content: "▾ "; }
+  .adv-body { padding: 0 18px 18px; display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
+  .adv-body .full { grid-column: 1 / -1; }
+  label.field { display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
+  label.field input, label.field select, label.field textarea { background: var(--bg); border: 1px solid var(--line);
+    border-radius: 9px; padding: 10px 12px; color: var(--text); width: 100%; }
+  label.field textarea { min-height: 90px; resize: vertical; }
+  .field-note { font-size: 12.5px; color: var(--muted); }
+  .how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 8px; max-width: 760px; }
+  .how div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; font-size: 14px;
+    color: var(--muted); }
+  .how b { color: var(--text); display: block; margin-bottom: 2px; }
+  .history { margin-top: 36px; max-width: 760px; }
+  .history h3 { font-size: 14px; color: var(--muted); font-weight: 600; margin: 0 0 10px; text-transform: uppercase;
+    letter-spacing: .06em; }
+  .history-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line);
+    border-radius: 10px; background: var(--panel); margin-bottom: 8px; cursor: pointer; }
+  .history-item:hover { border-color: #3a4a40; }
+  .history-item .t { flex: 1; font-weight: 600; }
+  .history-item .m { color: var(--muted); font-size: 13px; }
+
+  /* İlerleme */
+  .progress-card { max-width: 640px; }
+  .bar { height: 10px; background: var(--bg); border-radius: 99px; overflow: hidden; border: 1px solid var(--line); }
+  .bar > i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 99px;
+    transition: width .5s ease; }
+  .bar.small { height: 6px; }
+  .pct-row { display: flex; justify-content: space-between; color: var(--muted); font-size: 14px; margin: 10px 0 18px; }
+  .steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  .steps li { display: flex; gap: 12px; align-items: center; color: var(--muted); }
+  .steps .dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); display: grid;
+    place-items: center; font-size: 12px; flex: none; }
+  .steps li.done { color: var(--text); }
+  .steps li.done .dot { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .steps li.now { color: var(--text); font-weight: 600; }
+  .steps li.now .dot { border-color: var(--accent); border-top-color: transparent; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .note { margin-top: 20px; font-size: 13.5px; color: var(--muted); background: var(--panel-2); border-radius: 10px;
+    padding: 12px 14px; }
+  .error-box { border: 1px solid rgba(255,107,107,.4); background: rgba(255,107,107,.08); color: #ffc9c9;
+    border-radius: 12px; padding: 14px 16px; margin-top: 16px; }
+
+  /* Oyuncular */
+  .match-head { display: flex; flex-wrap: wrap; align-items: end; gap: 12px 20px; margin-bottom: 18px; }
+  .match-head .meta { color: var(--muted); font-size: 14px; }
+  .match-head .spacer { flex: 1; }
+  .search { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px;
+    width: 260px; max-width: 100%; color: var(--text); }
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+  .tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 14px; cursor: pointer;
+    color: var(--muted); font-weight: 600; margin-bottom: -1px; }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+  .tab span { color: var(--muted); font-weight: 500; }
+  .cat-icon { width: 54px; height: 54px; border-radius: 14px; flex: none; display: grid; place-items: center;
+    font-size: 26px; background: color-mix(in srgb, var(--cc) 22%, transparent); border: 1px solid var(--cc); }
+  .rename { display: flex; gap: 6px; margin-top: 6px; }
+  .rename input { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px;
+    color: var(--text); width: 200px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+  .pcard { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px;
+    display: flex; flex-direction: column; gap: 12px; cursor: pointer; transition: .15s; }
+  .pcard:hover { border-color: #3d5045; transform: translateY(-1px); }
+  .pcard .top { display: flex; gap: 12px; align-items: center; }
+  .avatar { width: 54px; height: 54px; border-radius: 50%; flex: none; object-fit: cover; display: grid;
+    place-items: center; font-weight: 800; font-size: 18px; color: #0b0f0d; }
+  .pcard .name { font-weight: 700; font-size: 16px; line-height: 1.25; }
+  .pcard .sub { color: var(--muted); font-size: 13px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 99px; background: var(--panel-2);
+    border: 1px solid var(--line); display: inline-flex; gap: 5px; align-items: center; }
+  .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--cc, var(--muted)); }
+  .pcard .bottom { display: flex; align-items: center; gap: 8px; margin-top: auto; }
+  .pcard .bottom .status { flex: 1; font-size: 13px; color: var(--muted); }
+  .status.ready { color: var(--accent); font-weight: 600; }
+  .status.err { color: var(--danger); }
+  .btn.sm { padding: 6px 11px; font-size: 13px; border-radius: 8px; }
+  .empty-state { color: var(--muted); padding: 40px 0; text-align: center; }
+
+  /* Oyuncu detayı */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 50; display: none; overflow-y: auto; }
+  .overlay.open { display: block; }
+  .sheet { background: var(--bg); border: 1px solid var(--line); border-radius: 18px; margin: 24px auto;
+    max-width: 1180px; width: calc(100% - 32px); }
+  .sheet-head { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+  .sheet-head .avatar { width: 46px; height: 46px; font-size: 16px; }
+  .sheet-head .title { flex: 1; min-width: 0; }
+  .sheet-head .title b { font-size: 19px; display: block; }
+  .sheet-head .title span { color: var(--muted); font-size: 13px; }
+  .close { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel);
+    cursor: pointer; font-size: 18px; }
+  .sheet-body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 20px; padding: 20px; }
+  .player-box { position: relative; background: #000; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9; }
+  .player-box video { width: 100%; height: 100%; display: block; background: #000; }
+  .player-wait { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 20px;
+    background: radial-gradient(circle at center, #15211b, #070a08); }
+  .player-wait .bar { width: 240px; margin: 12px auto 0; }
+  .preview-banner { display: none; align-items: center; gap: 10px; background: rgba(79,179,255,.12);
+    border: 1px solid rgba(79,179,255,.35); color: #cfe8ff; padding: 8px 12px; border-radius: 10px; margin-top: 10px;
+    font-size: 14px; }
+  .preview-banner.show { display: flex; }
+  .preview-banner span { flex: 1; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; align-items: center; }
+  .actions .info { color: var(--muted); font-size: 13.5px; }
+  .clips-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .clips-head h2 { flex: 1; font-size: 16px; }
+  .link-btn { background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; font-size: 13px; }
+  .clip-list { display: grid; gap: 8px; max-height: 62vh; overflow-y: auto; padding-right: 4px; }
+  .clip { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 10px 12px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  .clip.off { opacity: .5; }
+  .clip input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+  .clip .what { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .clip .time { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+  .clip .why { color: var(--muted); font-size: 12.5px; margin-top: 3px; overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .conf { display: inline-block; width: 38px; height: 5px; background: var(--line); border-radius: 9px; overflow: hidden;
+    vertical-align: middle; }
+  .conf i { display: block; height: 100%; background: var(--accent); }
+  .apply { position: sticky; bottom: 0; margin-top: 12px; display: none; gap: 10px; align-items: center;
+    background: var(--panel-2); border: 1px solid var(--accent); border-radius: 12px; padding: 12px; }
+  .apply.show { display: flex; }
+  .apply span { flex: 1; font-size: 14px; }
+
+  @media (max-width: 860px) {
+    .sheet-body { grid-template-columns: 1fr; }
+    .clip-list { max-height: none; }
+    .how { grid-template-columns: 1fr; }
+    .adv-body { grid-template-columns: 1fr; }
+    .sheet { margin: 0; width: 100%; border-radius: 0; min-height: 100%; }
+    .logo small { display: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="logo" onclick="goHome()"><span class="logo-mark">⚽</span> macklip <small>maç klip botu</small></div>
+    <div class="spacer"></div>
+    <button class="btn ghost" id="newBtn" onclick="goHome()" hidden>＋ Yeni maç</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- 1. Yükleme -->
+  <section class="view" id="v-upload">
+    <h1>Maçı yükle, bot bölsün, kategorilesin, birleştirsin.</h1>
+    <p class="lead">Bot maçı görüntüden izler: sahneleri böler; golleri, tekrar gösterilen pozisyonları, kartları, yakın çekimleri, röportajları ve antrenmanı kategoriler. Her oyuncu ve her kategori için klipleri maçtaki sırasıyla tek videoda birleştirir. Sen istediğini seçip indirirsin.</p>
+    <div class="upload-grid">
+      <div class="drop" id="drop" tabindex="0">
+        <div class="empty">
+          <div class="icon">🎬</div>
+          <strong>Maç videosunu buraya sürükle</strong>
+          <div class="hint">ya da tıklayıp seç · MP4, MKV, MOV · tam maç yayını</div>
+        </div>
+        <div class="file-chosen">
+          <div class="icon">🎞️</div>
+          <div style="flex:1;min-width:0">
+            <div class="name" id="fileName"></div>
+            <div class="size" id="fileSize"></div>
+          </div>
+          <button class="btn sm" type="button" onclick="event.stopPropagation(); pickFile()">Değiştir</button>
+        </div>
+        <input type="file" id="fileInput" accept="video/*,.mkv" hidden>
+      </div>
+
+      <details class="adv">
+        <summary>Gelişmiş ayarlar (isteğe bağlı)</summary>
+        <div class="adv-body">
+          <label class="field full">Kadro listesi
+            <textarea id="squad" placeholder="Her satıra bir oyuncu, örn.&#10;Arda Güler&#10;Kerem Aktürkoğlu"></textarea>
+            <span class="field-note">Boş bırakırsan isimler yayının ekrana yazdığı yazılardan bulunur. Doldurursan okunan yazılar bu listeyle eşleştirilir, isimler daha doğru çıkar.</span>
+          </label>
+        </div>
+      </details>
+
+      <div><button class="btn primary big" id="startBtn" disabled onclick="startUpload()">Klipleri çıkar →</button></div>
+
+      <div class="how">
+        <div><b>1 · Böler</b>Kamera geçişlerinden sahneleri ayırır: oyun, yakın çekim, tekrar, röportaj, tribün, antrenman.</div>
+        <div><b>2 · Anlar</b>Skor tabelasından golleri, tekrarlardan önemli pozisyonları, ekran yazılarından isimleri okur; yüzleri tanır.</div>
+        <div><b>3 · Birleştirir</b>Her oyuncu ve her kategori için klipleri maçtaki sırasıyla tek videoya koyar.</div>
+      </div>
+    </div>
+
+    <div class="history" id="history" hidden>
+      <h3>Önceki maçlar</h3>
+      <div id="historyList"></div>
+    </div>
+  </section>
+
+  <!-- 2. Yükleniyor / analiz -->
+  <section class="view" id="v-progress">
+    <h1 id="progTitle">Maç yükleniyor…</h1>
+    <p class="lead" id="progLead">Dosya bilgisayarındaki macklip uygulamasına aktarılıyor.</p>
+    <div class="card progress-card">
+      <div class="bar"><i id="progBar"></i></div>
+      <div class="pct-row"><span id="progStage">Yükleniyor</span><span id="progPct">%0</span></div>
+      <ol class="steps" id="steps"></ol>
+      <div class="note">⏱ Bot kareleri tek tek inceler: 90 dakikalık bir maç bilgisayarına göre 30-60 dakika sürebilir. Bu sekmeyi kapatabilirsin; geri geldiğinde kaldığı yerden görünür.</div>
+      <div class="error-box" id="progError" hidden></div>
+    </div>
+  </section>
+
+  <!-- 3. Oyuncular -->
+  <section class="view" id="v-players">
+    <div class="match-head">
+      <div>
+        <h1 id="matchTitle" style="margin-bottom:2px"></h1>
+        <div class="meta" id="matchMeta"></div>
+      </div>
+      <div class="spacer"></div>
+      <input class="search" id="search" placeholder="🔍 Ara" oninput="renderPlayers()">
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="oyuncu" onclick="setTab('oyuncu')">Oyuncular <span id="nPlayers"></span></button>
+      <button class="tab" data-tab="kategori" onclick="setTab('kategori')">Kategoriler <span id="nCats"></span></button>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+</main>
+
+<!-- Oyuncu detayı -->
+<div class="overlay" id="overlay" onclick="if (event.target === this) closePlayer()">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div id="dAvatar"></div>
+      <div class="title"><b id="dName"></b><span id="dMeta"></span></div>
+      <button class="close" onclick="closePlayer()" aria-label="Kapat">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div>
+        <div class="player-box">
+          <video id="video" controls playsinline preload="metadata"></video>
+          <div class="player-wait" id="wait">
+            <div>
+              <div style="font-size:30px">🎬</div>
+              <div id="waitText" style="font-weight:600;margin-top:6px">Video hazırlanıyor…</div>
+              <div class="bar small"><i id="waitBar"></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="preview-banner" id="previewBanner">
+          <span id="previewText"></span>
+          <button class="btn sm" onclick="backToCompilation()">Derlemeye dön</button>
+        </div>
+        <div class="actions">
+          <a class="btn primary disabled" id="dlBtn" href="#">⬇ Videoyu indir</a>
+          <span class="info" id="dInfo"></span>
+        </div>
+      </div>
+      <div>
+        <div class="clips-head">
+          <h2>Klipler</h2>
+          <button class="link-btn" onclick="setAll(true)">Tümünü seç</button>
+          <span style="color:var(--line)">|</span>
+          <button class="link-btn" onclick="setAll(false)">Hiçbiri</button>
+        </div>
+        <div class="clip-list" id="clipList"></div>
+        <div class="apply" id="applyBar">
+          <span id="applyText"></span>
+          <button class="btn primary sm" onclick="applySelection()">Videoyu yeniden oluştur</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CAT_COLOR = {
+  "gol": "var(--c-gol)", "asist": "var(--c-asist)", "çalım": "var(--c-calim)", "şut": "var(--c-sut)",
+  "faul": "var(--c-faul)", "yakın çekim": "var(--c-yakin)", "antrenman": "var(--c-antrenman)",
+  "röportaj": "var(--c-roportaj)", "aksiyon": "var(--c-aksiyon)", "gol sevinci": "#ffe066",
+  "pozisyon": "var(--c-asist)", "kart": "#ffd43b", "oyuncu değişikliği": "var(--c-calim)", "tribün": "#ff922b",
+};
+const STAGES = [
+  "Görüntü inceleniyor",
+  "Sahneler ve olaylar çıkarılıyor",
+];
+const AVATAR_COLORS = ["#2fd27a", "#4fb3ff", "#c58bff", "#ffb547", "#7fd8d0", "#f4a3c8", "#a7c957"];
+
+const CAT_ICON = {
+  "gol": "⚽", "gol sevinci": "🎉", "pozisyon": "🔁", "kart": "🟨", "oyuncu değişikliği": "🔄",
+  "yakın çekim": "🎥", "röportaj": "🎤", "antrenman": "🏃", "tribün": "📣",
+};
+let tab = "oyuncu";
+let file = null, job = null, pollTimer = null, openNo = null, draft = null, shownVersion = null;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const fmt = t => `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
+const fmtDur = t => t >= 3600 ? `${Math.floor(t / 3600)} sa ${Math.floor(t % 3600 / 60)} dk` : t >= 60 ? `${Math.floor(t / 60)} dk ${Math.round(t % 60)} sn` : `${Math.round(t)} sn`;
+const fmtSize = b => b > 1e9 ? (b / 1e9).toFixed(2) + " GB" : (b / 1e6).toFixed(0) + " MB";
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} },
+};
+
+function show(view) {
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === "v-" + view));
+  $("newBtn").hidden = view === "upload";
+}
+
+/* ---------- Yükleme ---------- */
+const drop = $("drop"), input = $("fileInput");
+function pickFile() { input.click(); }
+drop.addEventListener("click", () => { if (!file) pickFile(); });
+drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") pickFile(); });
+input.addEventListener("change", () => input.files[0] && setFile(input.files[0]));
+["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => e.dataTransfer.files[0] && setFile(e.dataTransfer.files[0]));
+window.addEventListener("dragover", e => e.preventDefault());
+window.addEventListener("drop", e => e.preventDefault());
+
+function setFile(f) {
+  file = f;
+  drop.classList.add("has-file");
+  $("fileName").textContent = f.name;
+  $("fileSize").textContent = fmtSize(f.size);
+  $("startBtn").disabled = false;
+}
+
+function startUpload() {
+  if (!file) return;
+  const form = new FormData();
+  form.append("mac", file);
+  form.append("kadro", $("squad").value);
+
+  show("progress");
+  $("progTitle").textContent = "Maç yükleniyor…";
+  $("progLead").textContent = file.name;
+  $("progError").hidden = true;
+  renderSteps(-1);
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", "/api/maclar");
+  xhr.upload.onprogress = e => {
+    if (!e.lengthComputable) return;
+    const f = e.loaded / e.total;
+    $("progBar").style.width = (f * 100).toFixed(1) + "%";
+    $("progPct").textContent = "%" + Math.floor(f * 100);
+    $("progStage").textContent = `Yükleniyor · ${fmtSize(e.loaded)} / ${fmtSize(e.total)}`;
+  };
+  xhr.onload = () => {
+    if (xhr.status !== 200) return showError("Yükleme başarısız: " + xhr.responseText);
+    job = JSON.parse(xhr.responseText);
+    openJob(job.id);
+  };
+  xhr.onerror = () => showError("Bağlantı koptu. macklip uygulamasının açık olduğundan emin ol.");
+  xhr.send(form);
+}
+
+function showError(msg) {
+  $("progError").hidden = false;
+  $("progError").innerHTML = esc(msg) + '<div style="margin-top:10px"><button class="btn sm" onclick="goHome()">Başa dön</button></div>';
+}
+
+function renderSteps(current) {
+  $("steps").innerHTML = STAGES.map((s, i) => {
+    const cls = i < current ? "done" : i === current ? "now" : "";
+    return `<li class="${cls}"><span class="dot">${i < current ? "✓" : ""}</span>${s}</li>`;
+  }).join("");
+}
+
+/* ---------- Maç durumu ---------- */
+async function openJob(id) {
+  store.set("macklip_job", id);
+  if (location.hash !== "#mac=" + id) history.replaceState(null, "", "#mac=" + id);
+  await poll(id);
+}
+
+async function poll(id) {
+  clearTimeout(pollTimer);
+  let next = 3000;
+  try {
+    const res = await fetch("/api/maclar/" + id);
+    if (res.status === 404) { store.set("macklip_job", null); return goHome(); }
+    job = await res.json();
+    if (job.durum === "hazır") {
+      show("players");
+      renderPlayers();
+      if (openNo !== null) renderDetail();
+      const busy = job.koleksiyonlar.some(p => p.durum !== "hazır" && p.durum !== "hata");
+      next = busy ? 2000 : 15000;
+    } else {
+      show("progress");
+      renderProgress();
+      if (job.durum === "hata") return;
+    }
+  } catch (e) {
+    next = 5000;
+  }
+  pollTimer = setTimeout(() => poll(id), next);
+}
+
+function renderProgress() {
+  $("progTitle").textContent = job.durum === "sırada" ? "Sırada bekliyor…" : "Maç analiz ediliyor…";
+  $("progLead").textContent = job.baslik + " · geçen süre " + fmtDur(job.gecen_sure);
+  $("progBar").style.width = (job.ilerleme * 100).toFixed(1) + "%";
+  $("progPct").textContent = "%" + Math.floor(job.ilerleme * 100);
+  $("progStage").textContent = job.asama;
+  renderSteps(job.durum === "sırada" ? -1 : Math.max(0, STAGES.indexOf(job.asama)));
+  if (job.durum === "hata") showError(job.hata || "Bilinmeyen hata");
+}
+
+/* ---------- Oyuncu kartları ---------- */
+function setTab(t) {
+  tab = t;
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === t));
+  renderPlayers();
+}
+function avatar(p, cls = "avatar") {
+  if (p.tur === "kategori") return `<div class="cat-icon" style="--cc:${CAT_COLOR[p.kategori]}">${CAT_ICON[p.kategori] || "🎬"}</div>`;
+  if (p.foto) return `<img class="${cls}" src="${p.foto}" alt="">`;
+  const initials = p.ad.split(/\s+/).map(w => w[0]).slice(0, 2).join("").toLocaleUpperCase("tr");
+  return `<div class="${cls}" style="background:${AVATAR_COLORS[p.no % AVATAR_COLORS.length]}">${esc(initials)}</div>`;
+}
+function chips(p) {
+  return p.sayilar.map(s => `<span class="chip" style="--cc:${CAT_COLOR[s.kategori]}">${s.adet} ${esc(s.baslik)}</span>`).join("");
+}
+function statusText(p) {
+  if (p.durum === "hazır" && p.guncel) return `<span class="status ready">✓ Video hazır</span>`;
+  if (p.durum === "hazırlanıyor") return `<span class="status">Hazırlanıyor %${Math.floor(p.ilerleme * 100)}</span>`;
+  if (p.durum === "hata") return `<span class="status err">Hata oluştu</span>`;
+  return `<span class="status">Sırada</span>`;
+}
+
+function renderPlayers() {
+  if (!job) return;
+  $("matchTitle").textContent = job.baslik;
+  const all = job.koleksiyonlar;
+  const players = all.filter(c => c.tur === "oyuncu"), cats = all.filter(c => c.tur === "kategori");
+  const ready = all.filter(c => c.durum === "hazır").length;
+  $("nPlayers").textContent = players.length;
+  $("nCats").textContent = cats.length;
+  $("matchMeta").textContent = `${players.length} kişi · ${cats.length} kategori · ${ready}/${all.length} video hazır` +
+    (job.goller.length ? ` · ${job.goller.length} gol` : "");
+  const q = $("search").value.trim().toLocaleLowerCase("tr");
+  const list = all.filter(c => c.tur === tab && (!q || c.ad.toLocaleLowerCase("tr").includes(q)));
+  $("grid").innerHTML = list.length ? list.map(p => `
+    <div class="pcard" onclick="openPlayer(${p.no})">
+      <div class="top">${avatar(p)}
+        <div><div class="name">${esc(p.ad)}</div><div class="sub">${p.klipler.length} klip · ${fmtDur(p.sure)}</div></div>
+      </div>
+      <div class="chips">${p.tur === "oyuncu" ? chips(p) : ""}</div>
+      <div class="bottom">${statusText(p)}
+        <a class="btn sm ${p.durum === "hazır" && p.guncel ? "" : "disabled"}" onclick="event.stopPropagation()"
+           href="/api/maclar/${job.id}/koleksiyon/${p.no}/video?indir=1&v=${p.surum}">⬇ İndir</a>
+      </div>
+    </div>`).join("") : `<div class="empty-state">${q ? "Sonuç yok." : tab === "oyuncu" ? "Kimse bulunamadı." : "Kategori yok."}</div>`;
+}
+
+/* ---------- Oyuncu detayı ---------- */
+function openPlayer(no) {
+  openNo = no;
+  headerKey = null;
+  draft = null;
+  shownVersion = null;
+  $("overlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+  fetch(`/api/maclar/${job.id}/koleksiyon/${no}/oncelik`, {method: "POST"});
+  renderDetail();
+  poll(job.id);
+}
+function closePlayer() {
+  openNo = null;
+  $("overlay").classList.remove("open");
+  document.body.style.overflow = "";
+  $("video").pause();
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape" && openNo !== null) closePlayer(); });
+
+function currentPlayer() { return job.koleksiyonlar[openNo]; }
+
+let headerKey = null;
+function renderDetail() {
+  const p = currentPlayer();
+  const key = p.no + "|" + p.ad;
+  if (key !== headerKey) {
+  headerKey = key;
+  $("dAvatar").innerHTML = avatar(p);
+  $("dName").textContent = p.ad;
+  $("dMeta").innerHTML = p.tur === "kategori" ? "Maçtaki tüm anlar, maçtaki sırasıyla"
+    : p.isimli ? "Klipler maçtaki sırasıyla birleştirilir"
+    : `Bot bu kişinin adını ekranda okuyamadı. <span class="rename"><input id="renameInput" placeholder="Adını yaz" onclick="event.stopPropagation()"><button class="btn sm" onclick="renameCurrent()">Kaydet</button></span>`;
+  }
+
+  const ready = p.durum === "hazır" && p.surum > 0;
+  const video = $("video");
+  if (ready && shownVersion !== p.surum && !$("previewBanner").classList.contains("show")) {
+    video.src = `/api/maclar/${job.id}/koleksiyon/${p.no}/video?v=${p.surum}`;
+    shownVersion = p.surum;
+  }
+  $("wait").style.display = ready || $("previewBanner").classList.contains("show") ? "none" : "grid";
+  $("waitText").textContent = p.durum === "hata" ? "Video oluşturulamadı: " + (p.hata || "")
+    : p.durum === "hazırlanıyor" ? `Video hazırlanıyor… %${Math.floor(p.ilerleme * 100)}`
+    : "Sırada, birazdan hazırlanacak…";
+  $("waitBar").style.width = (p.ilerleme * 100) + "%";
+
+  const dl = $("dlBtn");
+  dl.classList.toggle("disabled", !ready);
+  dl.href = `/api/maclar/${job.id}/koleksiyon/${p.no}/video?indir=1&v=${p.surum}`;
+  $("dInfo").textContent = `${p.klipler.filter(c => c.secili).length} klip · ${fmtDur(p.sure)}` +
+    (p.durum === "hazırlanıyor" && p.surum > 0 ? " · yeni sürüm hazırlanıyor…" : "");
+
+  if (draft === null) draft = new Set(p.klipler.filter(c => c.secili).map(c => c.no));
+  $("clipList").innerHTML = p.klipler.map(c => `
+    <div class="clip ${draft.has(c.no) ? "" : "off"}">
+      <input type="checkbox" ${draft.has(c.no) ? "checked" : ""} onchange="toggleClip(${c.no}, this.checked)" aria-label="Klibi dahil et">
+      <div style="min-width:0">
+        <div class="what">
+          <span class="chip" style="--cc:${CAT_COLOR[c.kategori]}">${esc(c.baslik)}</span>
+          <span class="time">${fmt(c.baslangic)}–${fmt(c.bitis)}</span>
+          <span class="conf" title="Güven %${Math.round(c.guven * 100)}"><i style="width:${c.guven * 100}%"></i></span>
+        </div>
+        <div class="why" title="${esc(c.neden.join(" · "))}">${esc(c.neden[0] || "")}</div>
+      </div>
+      <button class="btn sm" onclick="previewClip(${c.no})" title="Maçta bu anı izle">▶</button>
+    </div>`).join("");
+  updateApplyBar();
+}
+
+async function renameCurrent() {
+  const ad = $("renameInput").value.trim();
+  if (!ad) return;
+  const res = await fetch(`/api/maclar/${job.id}/koleksiyon/${openNo}/ad`, {
+    method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ad}),
+  });
+  if (res.ok) { job.koleksiyonlar[openNo] = await res.json(); renderDetail(); renderPlayers(); }
+}
+
+function toggleClip(no, on) {
+  on ? draft.add(no) : draft.delete(no);
+  renderDetail();
+}
+function setAll(on) {
+  const p = currentPlayer();
+  draft = new Set(on ? p.klipler.map(c => c.no) : []);
+  renderDetail();
+}
+function updateApplyBar() {
+  const p = currentPlayer();
+  const saved = new Set(p.klipler.filter(c => c.secili).map(c => c.no));
+  const changed = draft.size !== saved.size || [...draft].some(n => !saved.has(n));
+  $("applyBar").classList.toggle("show", changed);
+  $("applyText").textContent = draft.size ? `${draft.size} klip seçili` : "En az bir klip seç";
+}
+async function applySelection() {
+  if (!draft.size) return;
+  const res = await fetch(`/api/maclar/${job.id}/koleksiyon/${openNo}/yeniden`, {
+    method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({secili: [...draft]}),
+  });
+  if (res.ok) {
+    job.koleksiyonlar[openNo] = await res.json();
+    draft = null;
+    renderDetail();
+    poll(job.id);
+  }
+}
+
+function previewClip(no) {
+  const c = currentPlayer().klipler[no];
+  const video = $("video");
+  $("previewBanner").classList.add("show");
+  $("previewText").textContent = `Önizleme: maçın ${fmt(c.baslangic)}–${fmt(c.bitis)} arası (${c.baslik})`;
+  $("wait").style.display = "none";
+  video.src = `${job.kaynak}#t=${c.baslangic.toFixed(1)},${c.bitis.toFixed(1)}`;
+  shownVersion = null;
+  video.play().catch(() => {});
+}
+function backToCompilation() {
+  $("previewBanner").classList.remove("show");
+  shownVersion = null;
+  renderDetail();
+}
+
+/* ---------- Başlangıç ---------- */
+async function goHome() {
+  clearTimeout(pollTimer);
+  closePlayer();
+  job = null;
+  store.set("macklip_job", null);
+  history.replaceState(null, "", location.pathname);
+  show("upload");
+  try {
+    const list = await (await fetch("/api/maclar")).json();
+    $("history").hidden = !list.length;
+    $("historyList").innerHTML = list.map(j => `
+      <div class="history-item" onclick="openJob('${j.id}')">
+        <span>⚽</span><span class="t">${esc(j.baslik)}</span>
+        <span class="m">${j.durum === "hazır" ? j.oyuncu_sayisi + " oyuncu" : j.durum}</span>
+        <span class="m">${new Date(j.tarih * 1000).toLocaleDateString("tr-TR")}</span>
+      </div>`).join("");
+  } catch {}
+}
+
+const fromHash = (location.hash.match(/mac=([\w-]+)/) || [])[1];
+const last = fromHash || store.get("macklip_job");
+last ? openJob(last) : goHome();
+</script>
+</body>
+</html>
